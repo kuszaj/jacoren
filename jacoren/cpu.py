@@ -90,3 +90,11 @@ def cpu_freq():
         return [_mapper(cpu) for cpu in cpus]
     else:
         return _cpufreq
+
+
+def cpu(times=False):
+    cpu_ = cpu_info()
+    cpu_['load'] = cpu_load(times)
+    cpu_['freq'] = cpu_freq()
+
+    return cpu_
