@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Utilities for CPU info."""
+
 import psutil
 from jacoren.platform import VERSION as _platform_version
 
@@ -9,7 +11,23 @@ LOGICAL_CORES = psutil.cpu_count(logical=True)
 PHYSICAL_CORES = psutil.cpu_count(logical=False)
 CORES = LOGICAL_CORES
 
+
 def cpu_info():
+    """
+    Return number of cores (logical and physical).
+
+    Function returns a dictionary:
+
+        {
+            'cores': <number of (logical) cores>,
+            'physical_cores': <number of physical cores>
+        }
+
+    Physical cores are the number of actual physical processor cores
+    available. Logical cores tells how many threads can be run in
+    parallel. Both values can differ if e.g. physical cores support
+    hyper-threading.
+    """
     return {
         'cores': CORES,
         'physical_cores': PHYSICAL_CORES
@@ -17,6 +35,45 @@ def cpu_info():
 
 
 def cpu_load(cpu_time=False):
+    """
+    Return CPU load for every logical core.
+
+    Function returns a list of dictionaries:
+
+        [
+            ...
+            {
+                'user': <user processes>,
+                'system': <kernel processes>,
+                'idle': <idle CPU>,
+                ...
+            },
+            ...
+        ]
+
+    Above fields are available for every platform. Additionally,
+    there are other, platform-specific fields:
+
+    Linux:
+        * nice - prioritized user processes
+        * iowait - waiting from I/O to complete
+        * irq - servicing hardware interrupts
+        * softirq - servicing software interrupts
+        * steal - other OS running in virtualized env (2.6.11+)
+        * guest - virtual CPUs (2.6.24+)
+        * guest_nice - prioritized virtual CPUs (3.2.0+)
+    BSD:
+        * nice - prioritized user processes
+        * irq - servicing hardware interrupts
+    Other POSIX platforms:
+        * nice - prioritized user processes
+    Windows:
+        * interrupt - servicing hardware interrupts
+        * dpc - servicing lower priority procedure interrupts
+
+    By default, function return all fields as CPU time percentages.
+    If cpu_time is true, function will return all fields as CPU times.
+    """
     #: Platform-independent
     fields = ('user', 'system', 'idle')
 
@@ -81,19 +138,57 @@ else:
         'max': _cpufreq.max,
     }
 
+
 def cpu_freq():
+    """
+    Return CPU frequency for every logical core.
+
+    Function returns a list of dictionaries:
+
+        [
+            ...
+            {
+                'current': <current freq>,
+                'min': <min freq>,
+                'max': <max freq>
+            },
+            ...
+        ]
+
+    On Linux function returns real-time value of current for every
+    logical core. On other platforms it returns a single element list
+    with fixed current value.
+    """
     if psutil.LINUX:
         fields = ('current', 'min', 'max')
         cpus = psutil.cpu_freq(percpu=True)
-        _mapper = lambda cpu: {field: getattr(cpu, field)
-                               for field in fields}
+
+        def _mapper(cpu):
+            return {field: getattr(cpu, field)
+                    for field in fields}
+
         return [_mapper(cpu) for cpu in cpus]
     else:
         return _cpufreq
 
 
 def cpu(times=False):
-    cpu_ = cpu_info()
+    """
+    Return CPU information.
+
+    Function amalgamates all other functions available in this module.
+    It returns a dictionary:
+
+        {
+            'info': <cpu_info()>,
+            'load': <cpu_load(times)>,
+            'freq': <cpu_freq()>,
+        }
+
+    For more specific description please refer to appropriate description
+    of above functions.
+    """
+    cpu_['info'] = cpu_info()
     cpu_['load'] = cpu_load(times)
     cpu_['freq'] = cpu_freq()
 
