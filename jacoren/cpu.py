@@ -15,6 +15,7 @@ def cpu_info():
         'physical_cores': PHYSICAL_CORES
     }
 
+
 def cpu_load(cpu_time=False):
     #: Platform-independent
     fields = ('user', 'system', 'idle')
@@ -67,3 +68,25 @@ def cpu_load(cpu_time=False):
         return d
 
     return [_mapper(cpu) for cpu in cpus]
+
+
+#: CPU frequency is fixed for non-Linux platforms
+if psutil.LINUX:
+    _cpufreq = None
+else:
+    _cpufreq = psutil.cpu_freq(percpu=False)
+    _cpufreq = {
+        'current': _cpufreq.current,
+        'min': _cpufreq.min,
+        'max': _cpufreq.max,
+    }
+
+def cpu_freq():
+    if psutil.LINUX:
+        fields = ('current', 'min', 'max')
+        cpus = psutil.cpu_freq(percpu=True)
+        _mapper = lambda cpu: {field: getattr(cpu, field)
+                               for field in fields}
+        return [_mapper(cpu) for cpu in cpus]
+    else:
+        return _cpufreq
