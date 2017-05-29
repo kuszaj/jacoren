@@ -14,14 +14,12 @@ a simple RESTful API for receiving data through HTTP requests.
 import jacoren.platform
 import jacoren.cpu
 
-
-#:
-#: Package info
-#:
-__version__ = '0.0.1'
-__title__ = 'jacoren'
-__description__ = ''
-__author__ = 'Piotr Kuszaj'
-__author_email__ = 'peterkuszaj@gmail.com'
-__license__ = 'MIT'
-__all__ = ['platform', 'cpu']
+from .__version__ import (
+    __version__,
+    __title__,
+    __description__,
+    __author__,
+    __author_email__,
+    __license__,
+    __all__,
+)
