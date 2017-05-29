@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import jacoren.platform
+import jacoren.cpu
+
+
 #:
 #: Package info
 #:
