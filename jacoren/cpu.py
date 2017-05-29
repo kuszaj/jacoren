@@ -22,29 +22,48 @@ def cpu_load(cpu_time=False):
     #: Platform-specific
     if psutil.LINUX:
         if _platform_version >= ('3', '2', '0'):
-            _fields = _fields + (
+            fields = fields + (
                 'nice', 'iowait', 'irq', 'softirq',
                 'steal', 'guest', 'guest_nice',
             )
         elif _platform_version >= ('2', '6', '24'):
-            _fields = _fields + (
+            fields = fields + (
                 'nice', 'iowait', 'irq', 'softirq',
                 'steal', 'guest',
             )
         elif _platform_version >= ('2', '6', '11'):
-            _fields = _fields + (
+            fields = fields + (
                 'nice', 'iowait', 'irq', 'softirq',
                 'steal',
             )
         else:
-            _fields = _fields + (
+            fields = fields + (
                 'nice', 'iowait', 'irq', 'softirq',
             )
     elif psutil.BSD:
-        _fields = _fields + ('nice', 'irq')
+        fields = fields + ('nice', 'irq')
     elif psutil.POSIX:
-        _fields = _fields + ('nice')
+        fields = fields + ('nice')
     elif psutil.WINDOWS:
-        _fields = _fields + ('interrupt', 'dpc')
+        fields = fields + ('interrupt', 'dpc')
     else:
         raise RuntimeError("cpuinfo not supported")
+
+    if cpu_time:
+        cpus = psutil.cpu_times(percpu=True)
+    else:
+        cpus = psutil.cpu_times_percent(percpu=True)
+
+    #: Mapper returning dictionary for a single CPU data
+    def _mapper(cpu):
+        if cpu_time:
+            d = {field: float(round(getattr(cpu, field), 2))
+                 for field in fields}
+        else:
+            d = {field: getattr(cpu, field)
+                 for field in fields}
+            d['used'] = float(round(100. - d['idle'], 2))
+
+        return d
+
+    return [_mapper(cpu) for cpu in cpus]
