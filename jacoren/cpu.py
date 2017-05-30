@@ -6,8 +6,6 @@ import platform
 import psutil
 from collections import OrderedDict
 
-from jacoren.platform import VERSION as _platform_version
-
 
 #: CPU name
 NAME = platform.processor()
