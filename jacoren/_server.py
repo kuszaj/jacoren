@@ -4,6 +4,7 @@ from __future__ import print_function
 import json
 from jacoren import (
     __version__ as version,
+    platform,
     cpu,
 )
 
@@ -24,6 +25,8 @@ class GetHandler(BaseHTTPRequestHandler):
 
     #: Predefined paths
     _paths = {
+        #: Plaform
+        'platform': platform.platform,
         #: CPU
         'cpu': cpu.cpu,
         'cpu/info': cpu.cpu_info,
