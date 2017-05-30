@@ -23,4 +23,7 @@ setup(
     packages=['jacoren'],
     package_dir={'jacoren': 'jacoren'},
     install_requires=requirements,
+    entry_points = {
+        'console_scripts': ['jacoren=jacoren._server:main'],
+    }
 )
