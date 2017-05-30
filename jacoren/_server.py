@@ -3,7 +3,7 @@
 from __future__ import print_function
 import json
 from jacoren import (
-    __version__ as version,
+    __version__ as jacoren_version,
     platform,
     cpu,
 )
@@ -21,7 +21,7 @@ def _func_to_dict(func):
 
 class GetHandler(BaseHTTPRequestHandler):
     request_version = 'HTTP/1.1'
-    server_version = 'jacoren/' + version
+    server_version = 'jacoren/' + jacoren_version
 
     #: Predefined paths
     _paths = {
@@ -91,12 +91,15 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(prog='jacoren')
+    parser.add_argument('-v', '--version',
+                        action='version',
+                        version='%(prog)s ' + jacoren_version)
     parser.add_argument('--host',
                         type=str, default='127.0.0.1',
-                        help='Host IP/address')
+                        help='host IP address/name (default: localhost)')
     parser.add_argument('--port',
                         type=int, default='1313',
-                        help='Port')
+                        help='port (default: 1313)')
     args = parser.parse_args()
 
     server = Server((args.host, args.port), GetHandler)
