@@ -3,6 +3,7 @@
 """Basic platform information."""
 
 import platform
+from collections import OrderedDict
 
 
 #: Platform OS
@@ -13,7 +14,7 @@ VERSION = tuple(platform.release().split('.', 3))
 
 
 def platform():
-    return {
-        'os': OS,
-        'version': VERSION,
-    }
+    return OrderedDict((
+        ('os', OS),
+        ('version', VERSION),
+    ))

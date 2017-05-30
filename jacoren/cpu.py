@@ -4,6 +4,8 @@
 
 import platform
 import psutil
+from collections import OrderedDict
+
 from jacoren.platform import VERSION as _platform_version
 
 
@@ -20,7 +22,7 @@ def cpu_info():
     """
     Return number of cores (logical and physical).
 
-    Function returns a dictionary:
+    Function returns OrderedDict instance:
 
         {
             'name': <CPU name>,
@@ -33,18 +35,18 @@ def cpu_info():
     parallel. Both values can differ if e.g. physical cores support
     hyper-threading.
     """
-    return {
-        'name': NAME,
-        'cores': CORES,
-        'physical_cores': PHYSICAL_CORES
-    }
+    return OrderedDict((
+        ('name', NAME),
+        ('cores', CORES),
+        ('physical_cores', PHYSICAL_CORES),
+    ))
 
 
 def cpu_load(cpu_time=False):
     """
     Return CPU load for every logical core.
 
-    Function returns a list of dictionaries:
+    Function returns a list of OrderedDict instances:
 
         [
             ...
@@ -80,55 +82,21 @@ def cpu_load(cpu_time=False):
     By default, function return all fields as CPU time percentages.
     If cpu_time is true, function will return all fields as CPU times.
     """
-    #: Platform-independent
-    fields = ('user', 'system', 'idle')
-
-    #: Platform-specific
-    if psutil.LINUX:
-        if _platform_version >= ('3', '2', '0'):
-            fields = fields + (
-                'nice', 'iowait', 'irq', 'softirq',
-                'steal', 'guest', 'guest_nice',
-            )
-        elif _platform_version >= ('2', '6', '24'):
-            fields = fields + (
-                'nice', 'iowait', 'irq', 'softirq',
-                'steal', 'guest',
-            )
-        elif _platform_version >= ('2', '6', '11'):
-            fields = fields + (
-                'nice', 'iowait', 'irq', 'softirq',
-                'steal',
-            )
-        else:
-            fields = fields + (
-                'nice', 'iowait', 'irq', 'softirq',
-            )
-    elif psutil.BSD:
-        fields = fields + ('nice', 'irq')
-    elif psutil.POSIX:
-        fields = fields + ('nice')
-    elif psutil.WINDOWS:
-        fields = fields + ('interrupt', 'dpc')
-    else:
-        raise RuntimeError("cpuinfo not supported")
-
     if cpu_time:
         cpus = psutil.cpu_times(percpu=True)
     else:
         cpus = psutil.cpu_times_percent(percpu=True)
+    cpus = [cpu._asdict() for cpu in cpus]
 
     #: Mapper returning dictionary for a single CPU data
     def _mapper(cpu):
         if cpu_time:
-            d = {field: float(round(getattr(cpu, field), 2))
-                 for field in fields}
+            for k,v in cpu.items():
+                cpu[k] = float(round(v, 2))
         else:
-            d = {field: getattr(cpu, field)
-                 for field in fields}
-            d['used'] = float(round(100. - d['idle'], 2))
+            cpu['used'] = float(round(100. - cpu['idle'], 2))
 
-        return d
+        return cpu
 
     return [_mapper(cpu) for cpu in cpus]
 
@@ -137,19 +105,14 @@ def cpu_load(cpu_time=False):
 if psutil.LINUX:
     _cpufreq = None
 else:
-    _cpufreq = psutil.cpu_freq(percpu=False)
-    _cpufreq = {
-        'current': _cpufreq.current,
-        'min': _cpufreq.min,
-        'max': _cpufreq.max,
-    }
+    _cpufreq = psutil.cpu_freq(percpu=False)._asdict()
 
 
 def cpu_freq():
     """
     Return CPU frequency for every logical core.
 
-    Function returns a list of dictionaries:
+    Function returns a list of OrderedDict instances:
 
         [
             ...
@@ -166,16 +129,10 @@ def cpu_freq():
     with fixed current value.
     """
     if psutil.LINUX:
-        fields = ('current', 'min', 'max')
         cpus = psutil.cpu_freq(percpu=True)
-
-        def _mapper(cpu):
-            return {field: getattr(cpu, field)
-                    for field in fields}
-
-        return [_mapper(cpu) for cpu in cpus]
+        return [cpu._asdict() for cpu in cpus]
     else:
-        return _cpufreq
+        return [_cpufreq]
 
 
 def cpu(cpu_time=False):
@@ -183,7 +140,7 @@ def cpu(cpu_time=False):
     Return CPU information.
 
     Function amalgamates all other functions available in this module.
-    It returns a dictionary:
+    It returns an OrderedDict instance:
 
         {
             'info': <cpu_info()>,
@@ -194,8 +151,8 @@ def cpu(cpu_time=False):
     For more specific description please refer to appropriate description
     of above functions.
     """
-    return {
-        'info': cpu_info(),
-        'load': cpu_load(cpu_time),
-        'freq': cpu_freq(),
-    }
+    return OrderedDict((
+        ('info', cpu_info()),
+        ('load', cpu_load(cpu_time)),
+        ('freq', cpu_freq()),
+    ))
