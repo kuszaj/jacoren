@@ -172,7 +172,7 @@ def cpu_freq():
         return _cpufreq
 
 
-def cpu(times=False):
+def cpu(cpu_time=False):
     """
     Return CPU information.
 
@@ -188,8 +188,8 @@ def cpu(times=False):
     For more specific description please refer to appropriate description
     of above functions.
     """
-    cpu_['info'] = cpu_info()
-    cpu_['load'] = cpu_load(times)
-    cpu_['freq'] = cpu_freq()
-
-    return cpu_
+    return {
+        'info': cpu_info(),
+        'load': cpu_load(cpu_time),
+        'freq': cpu_freq(),
+    }
