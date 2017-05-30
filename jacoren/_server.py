@@ -56,8 +56,19 @@ class GetHandler(BaseHTTPRequestHandler):
 
     def _set_header(self, code, message):
         self.send_response(code)
+
+        #: Main headers
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', len(message))
+
+        #:
+        #: A man is not dead while his name is still spoken.
+        #:                  ~ Going Postal, Chapter 4 prologue
+        #:
+        #: See: gnuterrypratchett.com
+        #:
+        self.send_header('X-Clacks-Overhead', 'GNU Terry Pratchett')
+
         self.end_headers()
 
     def _send_response(self, code, response):
