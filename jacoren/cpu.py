@@ -2,9 +2,13 @@
 
 """Utilities for CPU info."""
 
+import platform
 import psutil
 from jacoren.platform import VERSION as _platform_version
 
+
+#: CPU name
+NAME = platform.processor()
 
 #: Core count (physical and logical)
 LOGICAL_CORES = psutil.cpu_count(logical=True)
@@ -19,6 +23,7 @@ def cpu_info():
     Function returns a dictionary:
 
         {
+            'name': <CPU name>,
             'cores': <number of (logical) cores>,
             'physical_cores': <number of physical cores>
         }
@@ -29,6 +34,7 @@ def cpu_info():
     hyper-threading.
     """
     return {
+        'name': NAME,
         'cores': CORES,
         'physical_cores': PHYSICAL_CORES
     }
