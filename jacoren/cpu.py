@@ -7,6 +7,12 @@ import psutil
 from collections import OrderedDict
 
 
+#: Architecture (machine type)
+ARCH = platform.machine()
+
+#: Bit architecture
+BITS, _ = platform.architecture()
+
 #: CPU name
 NAME = platform.processor()
 
@@ -23,6 +29,8 @@ def cpu_info():
     Function returns OrderedDict instance:
 
         {
+            'arch': <CPU architecture>
+            'bits': <bit architecture>
             'name': <CPU name>,
             'cores': <number of (logical) cores>,
             'physical_cores': <number of physical cores>
@@ -34,6 +42,8 @@ def cpu_info():
     hyper-threading.
     """
     return OrderedDict((
+        ('arch', ARCH),
+        ('bits', BITS),
         ('name', NAME),
         ('cores', CORES),
         ('physical_cores', PHYSICAL_CORES),
