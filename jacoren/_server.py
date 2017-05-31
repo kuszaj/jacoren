@@ -22,6 +22,7 @@ from jacoren import (
     platform,
     cpu,
     memory,
+    disks,
 )
 
 
@@ -85,6 +86,8 @@ class GetHandler(BaseHTTPRequestHandler):
         'memory/ram': _for_api(memory.memory_ram),
         'memory/swap': _for_api(memory.memory_swap),
 
+        #: Disks
+        'disks': _for_api(disks.disks, in_dict=True),
     }
 
     def do_GET(self):

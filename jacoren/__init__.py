@@ -14,6 +14,7 @@ a simple RESTful API for receiving data through HTTP requests.
 import jacoren.platform
 import jacoren.cpu
 import jacoren.memory
+import jacoren.disks
 
 from .__version__ import (
     __version__,
