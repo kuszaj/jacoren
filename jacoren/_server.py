@@ -147,26 +147,33 @@ class GetHandler(BaseHTTPRequestHandler):
 
 
 class Server(HTTPServer):
-    def __init__(self, server_address, RequestHandlerClass):
-        HTTPServer.__init__(self, server_address, RequestHandlerClass)
-        print("Starting server on %s:%d" % (self.server_name,
-                                            self.server_port))
+    pass
 
 
 def main():
     import argparse
+    import time
 
     parser = argparse.ArgumentParser(prog='jacoren')
     parser.add_argument('-v', '--version',
                         action='version',
                         version='%(prog)s ' + jacoren_version)
     parser.add_argument('--host',
-                        type=str, default='127.0.0.1',
+                        type=str, default='localhost',
                         help='host IP address/name (default: localhost)')
     parser.add_argument('--port',
                         type=int, default='1313',
                         help='port (default: 1313)')
     args = parser.parse_args()
 
+    print(":: Running server on %s:%d" % (args.host, args.port))
     server = Server((args.host, args.port), GetHandler)
-    server.serve_forever()
+    print(":: Start: %s" % (time.strftime("[%d/%B/%Y %H:%M:%S]"), ))
+    
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+
+    server.server_close()
+    print(":: End: %s" % (time.strftime("[%d/%B/%Y %H:%M:%S]"), ))
