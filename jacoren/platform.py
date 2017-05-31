@@ -18,9 +18,14 @@ VERSION = tuple(platform.release().split('.', 3))
 _boot_time = psutil.boot_time()
 
 
+def _tdiff(t1, t2):
+    """Return time difference t1-t2 as a rounded integer."""
+    return int(round(t1- t2))
+
+
 def platform_uptime():
     """Return uptime in seconds."""
-    return int(round(time.time() - _boot_time))
+    return _tdiff(time.time(), _boot_time)
 
 
 def platform_users():
@@ -46,7 +51,7 @@ def platform_users():
     #: Avoid duplicate usernames
     users = [OrderedDict([
         ('name', u.name),
-        ('logged_time', int(round(now - u.started))),
+        ('logged_time', _tdiff(now, u.started)),
     ]) for u in psutil.users()
        if not (u.name in _useen or _useen_add(u.name))]
 
