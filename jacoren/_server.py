@@ -62,6 +62,7 @@ def _for_api(func, in_dict=False):
 
 class GetHandler(BaseHTTPRequestHandler):
     request_version = 'HTTP/1.1'
+    protocol_version = 'HTTP/1.1'
     server_version = 'jacoren/' + jacoren_version
 
     #: Predefined paths
