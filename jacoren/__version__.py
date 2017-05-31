@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+"""Package info."""
+
 __version__ = '0.0.1'
 __title__ = 'jacoren'
 __description__ = ''
