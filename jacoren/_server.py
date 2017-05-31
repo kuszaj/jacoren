@@ -67,6 +67,8 @@ class GetHandler(BaseHTTPRequestHandler):
     _paths = {
         #: Plaform
         'platform': _for_api(platform.platform),
+        'platform/uptime': _for_api(platform.platform_uptime,
+                                    in_dict=True),
         #: CPU
         'cpu': _for_api(cpu.cpu),
         'cpu/info': _for_api(cpu.cpu_info),

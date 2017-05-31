@@ -2,6 +2,8 @@
 
 """Basic platform information."""
 
+import time
+import psutil
 import platform
 from collections import OrderedDict
 
@@ -11,6 +13,14 @@ OS = platform.system()
 
 #: Platform version tuple (major, minor, release)
 VERSION = tuple(platform.release().split('.', 3))
+
+#: Boot time
+_boot_time = psutil.boot_time()
+
+
+def platform_uptime():
+    """Return uptime in seconds."""
+    return int(round(time.time() - _boot_time))
 
 
 def platform():
@@ -26,6 +36,7 @@ def platform():
                 <minor version>,
                 <release>
             ],
+            'uptime': <uptime in seconds>
         }
 
     On some platforms, minor version and release might not be
@@ -34,4 +45,5 @@ def platform():
     return OrderedDict((
         ('os', OS),
         ('version', VERSION),
+        ('uptime', platform_uptime()),
     ))
