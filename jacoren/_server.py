@@ -112,6 +112,8 @@ class GetHandler(BaseHTTPRequestHandler):
 
     def _get_message(self, d):
         message = json.dumps(d)
+        message += '\r\n'
+
         try:
             message = bytes(message, 'utf8')
         except:
