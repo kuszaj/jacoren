@@ -113,6 +113,10 @@ class GetHandler(BaseHTTPRequestHandler):
             #: Undefined path
             response = {'message': '%s not found' % (path,)}
             self._send_response(404, response)
+        except Exception:
+            #: Other error
+            response = {'message': 'Internal server error' % (path,)}
+            self._send_response(500, response)
 
     def _get_message(self, d):
         message = json.dumps(d)
