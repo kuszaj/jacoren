@@ -24,7 +24,7 @@ CORES = LOGICAL_CORES
 
 def cpu_info():
     """
-    Return number of cores (logical and physical).
+    Return basic information about CPU.
 
     Function returns OrderedDict instance:
 
