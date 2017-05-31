@@ -23,6 +23,30 @@ def platform_uptime():
     return int(round(time.time() - _boot_time))
 
 
+def platform_users():
+    """
+    Return list of logged users.
+
+    Function returns list of OrderedDict instances:
+
+        [
+            ...
+            {
+                'name': <user's name>,
+                'logged_time': <time after logging in seconds>,
+            }
+            ...
+        ]
+    """
+    now = time.time()
+    users = [OrderedDict([
+        ('name', u.name),
+        ('logged_time', int(round(now - _boot_time))),
+    ]) for u in psutil.users()]
+
+    return users
+
+
 def platform():
     """
     Return basic information about platform.
@@ -36,7 +60,8 @@ def platform():
                 <minor version>,
                 <release>
             ],
-            'uptime': <uptime in seconds>
+            'uptime': <uptime in seconds>,
+            'users': <users currently logged in>,
         }
 
     On some platforms, minor version and release might not be
@@ -46,4 +71,5 @@ def platform():
         ('os', OS),
         ('version', VERSION),
         ('uptime', platform_uptime()),
+        ('users', platform_users()),
     ))
