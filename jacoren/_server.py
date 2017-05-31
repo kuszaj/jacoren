@@ -2,11 +2,8 @@
 
 from __future__ import print_function
 import json
-from jacoren import (
-    __version__ as jacoren_version,
-    platform,
-    cpu,
-)
+from functools import wraps
+from collections import Iterable, OrderedDict
 
 try:
     from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -14,9 +11,52 @@ except ImportError:
     #: Python 2.7
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
+try:
+    from urllib.parse import parse_qs
+except ImportError:
+    #: Python 2.7
+    from urlparse import parse_qs
 
-def _func_to_dict(func):
-    return lambda: {func.__name__: func()}
+from jacoren import (
+    __version__ as jacoren_version,
+    platform,
+    cpu,
+)
+
+
+def _cast_arg(arg):
+    if isinstance(arg, Iterable) and not isinstance(arg, str):
+        if len(arg) == 0:
+            return None
+        elif len(arg) == 1:
+            arg = arg[0]
+        else:
+            return arg
+
+    if isinstance(arg, str):
+        if arg.isdigit():
+            return int(arg)
+
+    return arg
+    
+
+def _for_api(func, in_dict=False):
+    @wraps(func)
+    def _new_func(**kwargs):
+        accepted = func.__code__.co_varnames
+
+        if 'kwargs' not in accepted:
+            kwargs = {k: _cast_arg(v) for k,v in kwargs.items()
+                      if k in accepted}
+
+        if in_dict:
+            return OrderedDict([
+                (func.__name__, func(**kwargs))
+            ])
+
+        return func(**kwargs)
+
+    return _new_func
 
 
 class GetHandler(BaseHTTPRequestHandler):
@@ -26,21 +66,32 @@ class GetHandler(BaseHTTPRequestHandler):
     #: Predefined paths
     _paths = {
         #: Plaform
-        'platform': platform.platform,
+        'platform': _for_api(platform.platform),
         #: CPU
-        'cpu': cpu.cpu,
-        'cpu/info': cpu.cpu_info,
-        'cpu/load': _func_to_dict(cpu.cpu_load),
-        'cpu/freq': _func_to_dict(cpu.cpu_freq),
+        'cpu': _for_api(cpu.cpu),
+        'cpu/info': _for_api(cpu.cpu_info),
+        'cpu/load': _for_api(cpu.cpu_load, in_dict=True),
+        'cpu/freq': _for_api(cpu.cpu_freq, in_dict=True),
     }
 
     def do_GET(self):
         #: Remove leading '/'
         path = self.path[1:]
 
+        #: Split arguments
+        try:
+            path, kwargs = path.split('?', 1)
+            kwargs = parse_qs(kwargs)
+        except:
+            kwargs = {}
+
+        #: Remove '/' at the end
+        if path.endswith('/'):
+            path = path[:-1]
+
         try:
             #: Respond with jsonified dictionary
-            response = GetHandler._paths[path]()
+            response = GetHandler._paths[path](**kwargs)
             self._send_response(200, response)
         except KeyError:
             #: Undefined path
