@@ -21,6 +21,7 @@ from jacoren import (
     __version__ as jacoren_version,
     platform,
     cpu,
+    memory,
 )
 
 
@@ -71,11 +72,18 @@ class GetHandler(BaseHTTPRequestHandler):
                                     in_dict=True),
         'platform/users': _for_api(platform.platform_users,
                                    in_dict=True),
+
         #: CPU
         'cpu': _for_api(cpu.cpu),
         'cpu/info': _for_api(cpu.cpu_info),
         'cpu/load': _for_api(cpu.cpu_load, in_dict=True),
         'cpu/freq': _for_api(cpu.cpu_freq, in_dict=True),
+
+        #: Memory
+        'memory': _for_api(memory.memory),
+        'memory/ram': _for_api(memory.memory_ram),
+        'memory/swap': _for_api(memory.memory_swap),
+
     }
 
     def do_GET(self):
