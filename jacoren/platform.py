@@ -39,10 +39,16 @@ def platform_users():
         ]
     """
     now = time.time()
+
+    _useen = set()
+    _useen_add = _useen.add
+
+    #: Avoid duplicate usernames
     users = [OrderedDict([
         ('name', u.name),
-        ('logged_time', int(round(now - _boot_time))),
-    ]) for u in psutil.users()]
+        ('logged_time', int(round(now - u.started))),
+    ]) for u in psutil.users()
+       if not (u.name in _useen or _useen_add(u.name))]
 
     return users
 
