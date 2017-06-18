@@ -2,23 +2,17 @@
 
 from __future__ import print_function
 import json
+from sys import version_info
 from functools import wraps
 from collections import Iterable, OrderedDict
-
-try:
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-except ImportError:
-    #: Python 2.7
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-
-try:
-    from urllib.parse import parse_qs
-except ImportError:
-    #: Python 2.7
-    from urlparse import parse_qs
+from werkzeug.wrappers import Request, Response
+from werkzeug.datastructures import Headers
+from werkzeug.routing import Map, Rule
+from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.serving import WSGIRequestHandler
 
 from jacoren import (
-    __version__ as jacoren_version,
+    __version__ as _jacoren_version,
     platform,
     cpu,
     memory,
@@ -26,145 +20,156 @@ from jacoren import (
 )
 
 
-def _cast_arg(arg):
-    if isinstance(arg, Iterable) and not isinstance(arg, str):
-        if len(arg) == 0:
-            return None
-        elif len(arg) == 1:
-            arg = arg[0]
-        else:
-            return arg
+_python_version = version_info
+_python_version = "%s.%s.%s" % (_python_version.major,
+                                _python_version.minor,
+                                _python_version.micro)
 
-    if isinstance(arg, str):
-        if arg.isdigit():
-            return int(arg)
 
-    return arg
-    
-
-def _for_api(func, in_dict=False):
+def json_response(func):
+    """Decorate function to it returns JSON response."""
     @wraps(func)
-    def _new_func(**kwargs):
-        accepted = func.__code__.co_varnames
+    def new(inst, *args, **kwargs):
+        result = func(inst, *args, **kwargs)
 
-        if 'kwargs' not in accepted:
-            kwargs = {k: _cast_arg(v) for k,v in kwargs.items()
-                      if k in accepted}
+        headers = Headers({
+            'Server': 'jacoren/%s Python/%s' % (_jacoren_version,
+                                                _python_version),
+            'Content-Type': 'application/json; charset=UTF-8',
 
-        if in_dict:
-            return OrderedDict([
-                (func.__name__, func(**kwargs))
-            ])
+            #:
+            #: A man is not dead while his name is still spoken.
+            #:                  ~ Going Postal, Chapter 4 prologue
+            #:
+            #: See: gnuterrypratchett.com
+            #:
+            'X-Clacks-Overhead': 'GNU Terry Pratchett',
+        })
 
-        return func(**kwargs)
+        return Response(json.dumps(result) + '\r\n',
+                        headers=headers)
+    return new
 
-    return _new_func
 
+class JacorenServer(object):
+    def __init__(self):
+        self.paths = Map((
+            #: Plaform
+            Rule('/platform', endpoint='platform',
+                 strict_slashes=False),
+            Rule('/platform/uptime', endpoint='platform_uptime',
+                 strict_slashes=False),
+            Rule('/platform/users', endpoint='platform_users',
+                 strict_slashes=False),
 
-class GetHandler(BaseHTTPRequestHandler):
-    request_version = 'HTTP/1.1'
-    protocol_version = 'HTTP/1.1'
-    server_version = 'jacoren/' + jacoren_version
+            #: CPU
+            Rule('/cpu', endpoint='cpu',
+                 strict_slashes=False),
+            Rule('/cpu/info', endpoint='cpu_info',
+                 strict_slashes=False),
+            Rule('/cpu/load', endpoint='cpu_load',
+                 strict_slashes=False),
+            Rule('/cpu/freq', endpoint='cpu_freq',
+                 strict_slashes=False),
 
-    #: Predefined paths
-    _paths = {
-        #: Plaform
-        'platform': _for_api(platform.platform),
-        'platform/uptime': _for_api(platform.platform_uptime,
-                                    in_dict=True),
-        'platform/users': _for_api(platform.platform_users,
-                                   in_dict=True),
+            #: Memory
+            Rule('/memory', endpoint='memory',
+                 strict_slashes=False),
+            Rule('/memory/ram', endpoint='memory_ram',
+                 strict_slashes=False),
+            Rule('/memory/swap', endpoint='memory_swap',
+                 strict_slashes=False),
 
-        #: CPU
-        'cpu': _for_api(cpu.cpu),
-        'cpu/info': _for_api(cpu.cpu_info),
-        'cpu/load': _for_api(cpu.cpu_load, in_dict=True),
-        'cpu/freq': _for_api(cpu.cpu_freq, in_dict=True),
+            #: Disks
+            Rule('/disks', endpoint='disks',
+                 strict_slashes=False),
+        ))
 
-        #: Memory
-        'memory': _for_api(memory.memory),
-        'memory/ram': _for_api(memory.memory_ram),
-        'memory/swap': _for_api(memory.memory_swap),
-
-        #: Disks
-        'disks': _for_api(disks.disks, in_dict=True),
-    }
-
-    def do_GET(self):
-        #: Remove leading '/'
-        path = self.path[1:]
-
-        #: Split arguments
-        try:
-            path, kwargs = path.split('?', 1)
-            kwargs = parse_qs(kwargs)
-        except:
-            kwargs = {}
-
-        #: Remove '/' at the end
-        if path.endswith('/'):
-            path = path[:-1]
+    def parse_request(self, request):
+        adapter = self.paths.bind_to_environ(request.environ)
 
         try:
-            #: Respond with jsonified dictionary
-            response = GetHandler._paths[path](**kwargs)
-            self._send_response(200, response)
-        except KeyError:
-            #: Undefined path
-            response = {'message': '%s not found' % (path,)}
-            self._send_response(404, response)
-        except Exception:
-            #: Other error
-            response = {'message': 'Internal server error' % (path,)}
-            self._send_response(500, response)
+            endpoint, values = adapter.match()
+            return getattr(self, endpoint)(request, **values)
+        except HTTPException as httpError:
+            return httpError
 
-    def _get_message(self, d):
-        message = json.dumps(d)
-        message += '\r\n'
+    def wsgi(self, environ, start_response):
+        request = Request(environ)
+        response = self.parse_request(request)
+        return response(environ, start_response)
 
-        try:
-            message = bytes(message, 'utf8')
-        except:
-            #: Python 2.7
-            pass
+    def __call__(self, environ, start_response):
+        return self.wsgi(environ, start_response)
 
-        return message
+    #:
+    #: Request handlers
+    #:
 
-    def _set_header(self, code, message):
-        self.send_response(code)
+    #: Platform
+    @json_response
+    def platform(self, request):
+        return platform.platform()
 
-        #: Main headers
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Content-Length', len(message))
+    @json_response
+    def platform_uptime(self, request):
+        return {'uptime': platform.platform_uptime()}
 
-        #:
-        #: A man is not dead while his name is still spoken.
-        #:                  ~ Going Postal, Chapter 4 prologue
-        #:
-        #: See: gnuterrypratchett.com
-        #:
-        self.send_header('X-Clacks-Overhead', 'GNU Terry Pratchett')
+    @json_response
+    def platform_users(self, request):
+        return {'users': platform.platform_users()}
 
-        self.end_headers()
+    #: CPU
+    @json_response
+    def cpu(self, request):
+        cpu_time = request.args.get('cpu_time', 0, type=int)
+        return cpu.cpu(bool(cpu_time=cpu_time))
 
-    def _send_response(self, code, response):
-        message = self._get_message(response)
-        self._set_header(code, message)
-        self.wfile.write(message)
+    @json_response
+    def cpu_info(self, request):
+        return cpu.cpu_info()
 
+    @json_response
+    def cpu_load(self, request):
+        cpu_time = request.args.get('cpu_time', 0, type=int)
+        return cpu.cpu_load(bool(cpu_time=cpu_time))
 
-class Server(HTTPServer):
-    pass
+    @json_response
+    def cpu_freq(self, request):
+        return cpu.cpu_freq()
+
+    #: Memory
+    @json_response
+    def memory(self, request):
+        percent = request.args.get('percent', 0, type=int)
+        return memory.memory(percent=bool(percent))
+
+    @json_response
+    def memory_ram(self, request):
+        percent = request.args.get('percent', 0, type=int)
+        return memory.memory_ram(percent=bool(percent))
+
+    @json_response
+    def memory_swap(self, request):
+        percent = request.args.get('percent', 0, type=int)
+        return memory.memory_swap(percent=bool(percent))
+
+    #: Disks
+    @json_response
+    def disks(self, request):
+        percent = request.args.get('percent', 0, type=int)
+        return disks.disks(percent=bool(percent))
 
 
 def main():
     import argparse
     import time
+    from werkzeug.serving import run_simple
 
     parser = argparse.ArgumentParser(prog='jacoren')
     parser.add_argument('-v', '--version',
                         action='version',
-                        version='%(prog)s ' + jacoren_version)
+                        version='%(prog)s ' + _jacoren_version)
     parser.add_argument('--host',
                         type=str, default='localhost',
                         help='host IP address/name (default: localhost)')
@@ -173,14 +178,6 @@ def main():
                         help='port (default: 1313)')
     args = parser.parse_args()
 
-    print(":: Running server on %s:%d" % (args.host, args.port))
-    server = Server((args.host, args.port), GetHandler)
-    print(":: Start: %s" % (time.strftime("[%d/%B/%Y %H:%M:%S]"), ))
-    
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-
-    server.server_close()
-    print(":: End: %s" % (time.strftime("[%d/%B/%Y %H:%M:%S]"), ))
+    WSGIRequestHandler.protocol_version = 'HTTP/1.1'
+    server = JacorenServer()
+    run_simple(args.host, args.port, server)
