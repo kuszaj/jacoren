@@ -95,8 +95,25 @@ class JacorenServer(object):
         try:
             endpoint, values = adapter.match()
             return getattr(self, endpoint)(request, **values)
-        except HTTPException as httpError:
-            return httpError
+        except HTTPException as http_error:
+            response = self.respond_with_error(request, http_error)
+            response.status_code = http_error.code
+            return response
+
+    @json_response
+    def respond_with_error(self, request, http_error):
+        if isinstance(http_error, NotFound):
+            response = {
+                'code': http_error.code,
+                'msg':  "%s not found" % (request.path)
+            }
+        else:
+            response = {
+                'code': http_error.code,
+                'msg':  http_error.description
+            }
+
+        return response
 
     def wsgi(self, environ, start_response):
         """Main WSGI function."""
@@ -133,7 +150,7 @@ class JacorenServer(object):
     def cpu(self, request):
         """Return information about CPU."""
         cpu_time = request.args.get('cpu_time', 0, type=int)
-        return cpu.cpu(bool(cpu_time=cpu_time))
+        return cpu.cpu(cpu_time=bool(cpu_time))
 
     @json_response
     def cpu_info(self, request):
@@ -144,7 +161,7 @@ class JacorenServer(object):
     def cpu_load(self, request):
         """Return CPU load for every logical core."""
         cpu_time = request.args.get('cpu_time', 0, type=int)
-        return cpu.cpu_load(bool(cpu_time=cpu_time))
+        return cpu.cpu_load(cpu_time=bool(cpu_time))
 
     @json_response
     def cpu_freq(self, request):
