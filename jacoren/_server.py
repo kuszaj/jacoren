@@ -52,7 +52,10 @@ def json_response(func):
 
 
 class JacorenServer(object):
+    """WSGI server class."""
+
     def __init__(self):
+        """Init resource paths."""
         self.paths = Map((
             #: Plaform
             Rule('/platform', endpoint='platform',
@@ -86,6 +89,7 @@ class JacorenServer(object):
         ))
 
     def parse_request(self, request):
+        """Parse HTTP request."""
         adapter = self.paths.bind_to_environ(request.environ)
 
         try:
@@ -95,11 +99,13 @@ class JacorenServer(object):
             return httpError
 
     def wsgi(self, environ, start_response):
+        """Main WSGI function."""
         request = Request(environ)
         response = self.parse_request(request)
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
+        """Act as WSGI function."""
         return self.wsgi(environ, start_response)
 
     #:
@@ -109,54 +115,65 @@ class JacorenServer(object):
     #: Platform
     @json_response
     def platform(self, request):
+        """Return platform info."""
         return platform.platform()
 
     @json_response
     def platform_uptime(self, request):
+        """Return platform uptime."""
         return {'uptime': platform.platform_uptime()}
 
     @json_response
     def platform_users(self, request):
+        """Return logged users."""
         return {'users': platform.platform_users()}
 
     #: CPU
     @json_response
     def cpu(self, request):
+        """Return information about CPU."""
         cpu_time = request.args.get('cpu_time', 0, type=int)
         return cpu.cpu(bool(cpu_time=cpu_time))
 
     @json_response
     def cpu_info(self, request):
+        """Return basic information about CPU."""
         return cpu.cpu_info()
 
     @json_response
     def cpu_load(self, request):
+        """Return CPU load for every logical core."""
         cpu_time = request.args.get('cpu_time', 0, type=int)
         return cpu.cpu_load(bool(cpu_time=cpu_time))
 
     @json_response
     def cpu_freq(self, request):
+        """Return CPU frequency for every logical core."""
         return cpu.cpu_freq()
 
     #: Memory
     @json_response
     def memory(self, request):
+        """Return memory metrics."""
         percent = request.args.get('percent', 0, type=int)
         return memory.memory(percent=bool(percent))
 
     @json_response
     def memory_ram(self, request):
+        """Return RAM metrics."""
         percent = request.args.get('percent', 0, type=int)
         return memory.memory_ram(percent=bool(percent))
 
     @json_response
     def memory_swap(self, request):
+        """Return swap metrics."""
         percent = request.args.get('percent', 0, type=int)
         return memory.memory_swap(percent=bool(percent))
 
     #: Disks
     @json_response
     def disks(self, request):
+        """Return disks metrics."""
         percent = request.args.get('percent', 0, type=int)
         return disks.disks(percent=bool(percent))
 
