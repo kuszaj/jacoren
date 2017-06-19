@@ -218,7 +218,7 @@ def wsgi(environ, start_response):
 def main():
     """
     Run single-threaded server.
-    
+
     Note: This should be used only if REST API will be called by
     localhost. Otherwise, wsgi() function should be used.
     """

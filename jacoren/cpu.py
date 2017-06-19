@@ -102,7 +102,7 @@ def cpu_load(cpu_time=False, core=None):
     #: Mapper returning dictionary for a single CPU data
     def _mapper(cpu):
         if cpu_time:
-            for k,v in cpu.items():
+            for k, v in cpu.items():
                 cpu[k] = float(round(v, 2))
         else:
             cpu['used'] = float(round(100. - cpu['idle'], 2))

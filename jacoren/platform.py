@@ -20,7 +20,7 @@ _boot_time = psutil.boot_time()
 
 def _tdiff(t1, t2):
     """Return time difference t1-t2 as a rounded integer."""
-    return int(round(t1- t2))
+    return int(round(t1 - t2))
 
 
 def platform_uptime():
