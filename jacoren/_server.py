@@ -207,7 +207,6 @@ class JacorenServer(object):
 
 def main():
     import argparse
-    import time
     from werkzeug.serving import run_simple
 
     parser = argparse.ArgumentParser(prog='jacoren')
