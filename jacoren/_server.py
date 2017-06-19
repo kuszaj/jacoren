@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Utilities for running REST API."""
+
 from __future__ import print_function
 import json
 from sys import version_info
@@ -110,6 +112,7 @@ class JacorenServer(object):
 
     @json_response
     def respond_with_error(self, request, http_error):
+        """Return response with HTTP error."""
         if isinstance(http_error, NotFound):
             response = {
                 'code': http_error.code,
@@ -206,12 +209,19 @@ class JacorenServer(object):
 
 
 def wsgi(environ, start_response):
+    """WSGI interface."""
     WSGIRequestHandler.protocol_version = 'HTTP/1.1'
     server = JacorenServer()
     return server.wsgi(environ, start_response)
 
 
 def main():
+    """
+    Run single-threaded server.
+    
+    Note: This should be used only if REST API will be called by
+    localhost. Otherwise, wsgi() function should be used.
+    """
     import argparse
     from werkzeug.serving import run_simple
 
