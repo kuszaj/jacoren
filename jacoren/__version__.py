@@ -8,4 +8,4 @@ __description__ = ''
 __author__ = 'Piotr Kuszaj'
 __author_email__ = 'peterkuszaj@gmail.com'
 __license__ = 'MIT'
-__all__ = ['platform', 'cpu']
+__all__ = ('platform', 'cpu', 'memory', 'disks')
