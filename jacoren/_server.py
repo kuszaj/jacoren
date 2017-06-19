@@ -20,10 +20,9 @@ from jacoren import (
 )
 
 
-_python_version = version_info
-_python_version = "%s.%s.%s" % (_python_version.major,
-                                _python_version.minor,
-                                _python_version.micro)
+_python_version = "%s.%s.%s" % (version_info.major,
+                                version_info.minor,
+                                version_info.micro)
 
 
 def json_response(func):
