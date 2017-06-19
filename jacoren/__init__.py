@@ -25,3 +25,5 @@ from .__version__ import (
     __license__,
     __all__,
 )
+
+from ._server import wsgi

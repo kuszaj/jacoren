@@ -205,6 +205,12 @@ class JacorenServer(object):
         return disks.disks(percent=bool(percent))
 
 
+def wsgi(environ, start_response):
+    WSGIRequestHandler.protocol_version = 'HTTP/1.1'
+    server = JacorenServer()
+    return server.wsgi(environ, start_response)
+
+
 def main():
     import argparse
     from werkzeug.serving import run_simple
