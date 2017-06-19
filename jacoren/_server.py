@@ -26,10 +26,13 @@ _python_version = "%s.%s.%s" % (version_info.major,
 
 
 def json_response(func):
-    """Decorate function to it returns JSON response."""
+    """Decorate function so it returns JSON response."""
     @wraps(func)
     def new(inst, *args, **kwargs):
         result = func(inst, *args, **kwargs)
+
+        if result is None:
+            raise NotFound
 
         headers = Headers({
             'Server': 'jacoren/%s Python/%s' % (_jacoren_version,
@@ -67,11 +70,17 @@ class JacorenServer(object):
             #: CPU
             Rule('/cpu', endpoint='cpu',
                  strict_slashes=False),
+            Rule('/cpu/<int:core>', endpoint='cpu',
+                 strict_slashes=False),
             Rule('/cpu/info', endpoint='cpu_info',
                  strict_slashes=False),
             Rule('/cpu/load', endpoint='cpu_load',
                  strict_slashes=False),
+            Rule('/cpu/load/<int:core>', endpoint='cpu_load',
+                 strict_slashes=False),
             Rule('/cpu/freq', endpoint='cpu_freq',
+                 strict_slashes=False),
+            Rule('/cpu/freq/<int:core>', endpoint='cpu_freq',
                  strict_slashes=False),
 
             #: Memory
@@ -146,10 +155,11 @@ class JacorenServer(object):
 
     #: CPU
     @json_response
-    def cpu(self, request):
+    def cpu(self, request, core=None):
         """Return information about CPU."""
         cpu_time = request.args.get('cpu_time', 0, type=int)
-        return cpu.cpu(cpu_time=bool(cpu_time))
+        return cpu.cpu(cpu_time=bool(cpu_time),
+                       core=core)
 
     @json_response
     def cpu_info(self, request):
@@ -157,15 +167,16 @@ class JacorenServer(object):
         return cpu.cpu_info()
 
     @json_response
-    def cpu_load(self, request):
+    def cpu_load(self, request, core=None):
         """Return CPU load for every logical core."""
         cpu_time = request.args.get('cpu_time', 0, type=int)
-        return cpu.cpu_load(cpu_time=bool(cpu_time))
+        return cpu.cpu_load(cpu_time=bool(cpu_time),
+                            core=core)
 
     @json_response
-    def cpu_freq(self, request):
+    def cpu_freq(self, request, core=None):
         """Return CPU frequency for every logical core."""
-        return cpu.cpu_freq()
+        return cpu.cpu_freq(core=core)
 
     #: Memory
     @json_response

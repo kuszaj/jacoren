@@ -50,11 +50,11 @@ def cpu_info():
     ))
 
 
-def cpu_load(cpu_time=False):
+def cpu_load(cpu_time=False, core=None):
     """
     Return CPU load for every logical core.
 
-    Function returns a list of OrderedDict instances:
+    Function returns an OrderedDict or list of OrderedDict instances:
 
         [
             ...
@@ -89,6 +89,9 @@ def cpu_load(cpu_time=False):
 
     By default, function return all fields as CPU time percentages.
     If cpu_time is true, function will return all fields as CPU times.
+    If core is given, function returns metrics only for given core
+    (indexing from zero). If given core doesn't exists, function
+    returns None.
     """
     if cpu_time:
         cpus = psutil.cpu_times(percpu=True)
@@ -106,7 +109,13 @@ def cpu_load(cpu_time=False):
 
         return cpu
 
-    return [_mapper(cpu) for cpu in cpus]
+    if core is None:
+        return [_mapper(cpu) for cpu in cpus]
+    else:
+        try:
+            return _mapper(cpus[core])
+        except IndexError:
+            return None
 
 
 #: CPU frequency is fixed for non-Linux platforms
@@ -116,11 +125,11 @@ else:
     _cpufreq = psutil.cpu_freq(percpu=False)._asdict()
 
 
-def cpu_freq():
+def cpu_freq(core=None):
     """
     Return CPU frequency for every logical core.
 
-    Function returns a list of OrderedDict instances:
+    Function returns an OrderedDict or list of OrderedDict instances:
 
         [
             ...
@@ -135,15 +144,25 @@ def cpu_freq():
     On Linux function returns real-time value of current for every
     logical core. On other platforms it returns a single element list
     with fixed current value.
+    If core is given, function returns metrics only for given core
+    (indexing from zero). If given core doesn't exists, function
+    returns None. This argument is ignored if used on any non-Linux
+    platform.
     """
     if psutil.LINUX:
         cpus = psutil.cpu_freq(percpu=True)
-        return [cpu._asdict() for cpu in cpus]
+        if core is None:
+            return [cpu._asdict() for cpu in cpus]
+        else:
+            try:
+                return cpus[core]._asdict()
+            except IndexError:
+                return None
     else:
-        return [_cpufreq]
+        return _cpufreq
 
 
-def cpu(cpu_time=False):
+def cpu(cpu_time=False, core=None):
     """
     Return CPU information.
 
@@ -151,16 +170,26 @@ def cpu(cpu_time=False):
     It returns an OrderedDict instance:
 
         {
-            'info': <cpu_info()>,
-            'load': <cpu_load(times)>,
-            'freq': <cpu_freq()>,
+            'info': <cpu_info()>, # given only if core is None
+            'load': <cpu_load(cpu_times, core)>,
+            'freq': <cpu_freq(core)>,
         }
 
     For more specific description please refer to appropriate description
     of above functions.
     """
-    return OrderedDict((
-        ('info', cpu_info()),
-        ('load', cpu_load(cpu_time)),
-        ('freq', cpu_freq()),
-    ))
+    if core is None:
+        return OrderedDict((
+            ('info', cpu_info()),
+            ('load', cpu_load(cpu_time)),
+            ('freq', cpu_freq()),
+        ))
+    else:
+        result = OrderedDict((
+            ('load', cpu_load(cpu_time, core)),
+            ('freq', cpu_freq(core)),
+        ))
+
+        if result['load'] is None:
+            return None
+        return result
