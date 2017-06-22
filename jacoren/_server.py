@@ -55,47 +55,65 @@ def json_response(func):
     return new
 
 
+class JacorenRule(Rule):
+    """Extended Rule."""
+
+    def __init__(self, *args, **kwargs):
+        """Same as Rule but with description for doc rule."""
+        self.doc_rule = kwargs.pop('doc_rule', None)
+        self.doc_desc = kwargs.pop('doc_desc', None)
+
+        super(JacorenRule, self).__init__(*args, **kwargs)
+        self.strict_slashes = False
+        if self.doc_rule is None:
+            self.doc_rule = self.rule
+
+
 class JacorenServer(object):
     """WSGI server class."""
 
     def __init__(self):
         """Init resource paths."""
         self.paths = Map((
+            #: Docs
+            JacorenRule('/', endpoint='api_help',
+                        doc_desc='This help resource'),
+
             #: Plaform
-            Rule('/platform', endpoint='platform',
-                 strict_slashes=False),
-            Rule('/platform/uptime', endpoint='platform_uptime',
-                 strict_slashes=False),
-            Rule('/platform/users', endpoint='platform_users',
-                 strict_slashes=False),
+            JacorenRule('/platform', endpoint='platform',
+                        doc_desc='Platform info'),
+            JacorenRule('/platform/uptime', endpoint='platform_uptime',
+                        doc_desc='Uptime in seconds'),
+            JacorenRule('/platform/users', endpoint='platform_users',
+                        doc_desc='Logged users'),
 
             #: CPU
-            Rule('/cpu', endpoint='cpu',
-                 strict_slashes=False),
-            Rule('/cpu/<int:core>', endpoint='cpu',
-                 strict_slashes=False),
-            Rule('/cpu/info', endpoint='cpu_info',
-                 strict_slashes=False),
-            Rule('/cpu/load', endpoint='cpu_load',
-                 strict_slashes=False),
-            Rule('/cpu/load/<int:core>', endpoint='cpu_load',
-                 strict_slashes=False),
-            Rule('/cpu/freq', endpoint='cpu_freq',
-                 strict_slashes=False),
-            Rule('/cpu/freq/<int:core>', endpoint='cpu_freq',
-                 strict_slashes=False),
+            JacorenRule('/cpu', endpoint='cpu',
+                        doc_desc='CPU info'),
+            JacorenRule('/cpu/<int:core>', endpoint='cpu',
+                        doc_desc='CPU core info', doc_rule='/cpu/<core>'),
+            JacorenRule('/cpu/info', endpoint='cpu_info',
+                        doc_desc='CPU basic info'),
+            JacorenRule('/cpu/load', endpoint='cpu_load',
+                        doc_desc='CPU load'),
+            JacorenRule('/cpu/load/<int:core>', endpoint='cpu_load',
+                        doc_desc='CPU core load', doc_rule='/cpu/load/<core>'),
+            JacorenRule('/cpu/freq', endpoint='cpu_freq',
+                        doc_desc='CPU frequency'),
+            JacorenRule('/cpu/freq/<int:core>', endpoint='cpu_freq',
+                        doc_desc='CPU core frequency', doc_rule='/cpu/freq/<core>'),
 
             #: Memory
-            Rule('/memory', endpoint='memory',
-                 strict_slashes=False),
-            Rule('/memory/ram', endpoint='memory_ram',
-                 strict_slashes=False),
-            Rule('/memory/swap', endpoint='memory_swap',
-                 strict_slashes=False),
+            JacorenRule('/memory', endpoint='memory',
+                        doc_desc='Memory metrics'),
+            JacorenRule('/memory/ram', endpoint='memory_ram',
+                        doc_desc='RAM metrics'),
+            JacorenRule('/memory/swap', endpoint='memory_swap',
+                        doc_desc='Swap metrics'),
 
             #: Disks
-            Rule('/disks', endpoint='disks',
-                 strict_slashes=False),
+            JacorenRule('/disks', endpoint='disks',
+                        doc_desc='Disks metrics'),
         ))
 
     def parse_request(self, request):
@@ -139,6 +157,14 @@ class JacorenServer(object):
     #:
     #: Request handlers
     #:
+
+    @json_response
+    def api_help(self, request):
+        """Return API help."""
+        return [OrderedDict((
+            ('uri', rule.doc_rule),
+            ('description', rule.doc_desc)
+        )) for rule in self.paths.iter_rules()]
 
     #: Platform
     @json_response
