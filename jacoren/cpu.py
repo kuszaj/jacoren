@@ -16,9 +16,11 @@ BITS, _ = platform.architecture()
 #: CPU name
 NAME = platform.processor()
 
-#: Core count (physical and logical)
+#: Number of logical cores
 LOGICAL_CORES = psutil.cpu_count(logical=True)
+#: Number of physical cores
 PHYSICAL_CORES = psutil.cpu_count(logical=False)
+#: Number of cores
 CORES = LOGICAL_CORES
 
 
@@ -26,7 +28,7 @@ def cpu_info():
     """
     Return basic information about CPU.
 
-    Function returns OrderedDict instance:
+    Function returns OrderedDict instance::
 
         {
             'arch': <CPU architecture>
@@ -40,6 +42,19 @@ def cpu_info():
     available. Logical cores tells how many threads can be run in
     parallel. Both values can differ if e.g. physical cores support
     hyper-threading.
+
+    :Example:
+
+    >>> import jacoren
+    >>> jacoren.cpu.cpu_info()
+    OrderedDict([('arch', 'x86_64'),
+                 ('bits', '64bit'),
+                 ('name', 'x86_64'),
+                 ('cores', '4'),
+                 ('physical_cores', '2')])
+
+    :return: Basic CPU information
+    :rtype: OrderedDict
     """
     return OrderedDict((
         ('arch', ARCH),
@@ -52,9 +67,9 @@ def cpu_info():
 
 def cpu_load(cpu_time=False, core=None):
     """
-    Return CPU load for every logical core.
+    Return CPU load.
 
-    Function returns an OrderedDict or list of OrderedDict instances:
+    Function returns an OrderedDict or list of OrderedDict instances::
 
         [
             ...
@@ -62,6 +77,7 @@ def cpu_load(cpu_time=False, core=None):
                 'user': <user processes>,
                 'system': <kernel processes>,
                 'idle': <idle CPU>,
+                'used': <used CPU (not given for cpu_time=True)>,
                 ...
             },
             ...
@@ -71,27 +87,98 @@ def cpu_load(cpu_time=False, core=None):
     there are other, platform-specific fields:
 
     Linux:
-        * nice - prioritized user processes
-        * iowait - waiting from I/O to complete
-        * irq - servicing hardware interrupts
-        * softirq - servicing software interrupts
-        * steal - other OS running in virtualized env (2.6.11+)
-        * guest - virtual CPUs (2.6.24+)
-        * guest_nice - prioritized virtual CPUs (3.2.0+)
+        * ``nice`` - prioritized user processes
+        * ``iowait`` - waiting from I/O to complete
+        * ``irq`` - servicing hardware interrupts
+        * ``softirq`` - servicing software interrupts
+        * ``steal`` - other OS running in virtualized env (2.6.11+)
+        * ``guest`` - virtual CPUs (2.6.24+)
+        * ``guest_nice`` - prioritized virtual CPUs (3.2.0+)
     BSD:
-        * nice - prioritized user processes
-        * irq - servicing hardware interrupts
+        * ``nice`` - prioritized user processes
+        * ``irq`` - servicing hardware interrupts
     Other POSIX platforms:
-        * nice - prioritized user processes
+        * ``nice`` - prioritized user processes
     Windows:
-        * interrupt - servicing hardware interrupts
-        * dpc - servicing lower priority procedure interrupts
+        * ``interrupt`` - servicing hardware interrupts
+        * ``dpc`` - servicing lower priority procedure interrupts
 
-    By default, function return all fields as CPU time percentages.
-    If cpu_time is true, function will return all fields as CPU times.
-    If core is given, function returns metrics only for given core
-    (indexing from zero). If given core doesn't exists, function
-    returns None.
+    :Example:
+
+    >>> import jacoren
+    >>> jacoren.cpu.cpu_load()
+    [OrderedDict([('user', 10.6),
+                  ('system', 1.7),
+                  ('idle', 86.2),
+                  ('used', 13.8),
+                  ('nice', 0.0),
+                  ('iowait', 1.3),
+                  ('irq', 0.0),
+                  ('softirq', 0.1),
+                  ('steal', 0.0),
+                  ('guest', 0.0),
+                  ('guest_nice', 0.0)]),
+     OrderedDict([('user', 8.8),
+                  ('system', 2.0),
+                  ('idle', 88.8),
+                  ('used', 11.2),
+                  ('nice', 0.0),
+                  ('iowait', 0.4),
+                  ('irq', 0.0),
+                  ('softirq', 0.0),
+                  ('steal', 0.0),
+                  ('guest', 0.0),
+                  ('guest_nice', 0.0)]),
+     OrderedDict([('user', 11.4),
+                  ('system', 1.7),
+                  ('idle', 84.7),
+                  ('used', 15.3),
+                  ('nice', 0.0),
+                  ('iowait', 2.1),
+                  ('irq', 0.0),
+                  ('softirq', 0.0),
+                  ('steal', 0.0),
+                  ('guest', 0.0),
+                  ('guest_nice', 0.0)]),
+     OrderedDict([('user', 12.5),
+                  ('system', 2.1),
+                  ('idle', 84.9),
+                  ('used', 15.1),
+                  ('nice', 0.0),
+                  ('iowait', 0.6),
+                  ('irq', 0.0),
+                  ('softirq', 0.0),
+                  ('steal', 0.0),
+                  ('guest', 0.0),
+                  ('guest_nice', 0.0)]),
+    >>> jacoren.cpu.cpu_load(cpu_time=True, core=2)
+    OrderedDict([('user', 17720.05),
+                 ('system', 1685.29),
+                 ('idle', 28722.33),
+                 ('nice', 13.78),
+                 ('iowait', 507.7),
+                 ('irq', 0.0),
+                 ('softirq', 84.44),
+                 ('steal', 0.0),
+                 ('guest', 0.0)
+                 ('guest_nice', 0.0)]),
+    >>> jacoren.cpu.cpu_load(core=4)
+    None
+
+    :param cpu_time: If true, function returns all values as CPU times.
+                     Otherwise, it will return them as CPU time percentages.
+    :param core: If isn't ``None``, function will return metrics only for
+                 given logical core (counting from zero) as ``OrderedDict``
+                 instance. Otherwise, it will return a list of ``OrderedDict``
+                 instances with metrics for all cores.
+    :type cpu_time: bool
+    :type core: int, None
+
+    .. note:: If **core** is beyond possible range, function will return
+              ``None``.
+
+    :returns: CPU load for all or single logical core
+    :rtype: list, OrderedDict, None
     """
     if cpu_time:
         cpus = psutil.cpu_times(percpu=True)
@@ -99,7 +186,7 @@ def cpu_load(cpu_time=False, core=None):
         cpus = psutil.cpu_times_percent(percpu=True)
     cpus = [cpu._asdict() for cpu in cpus]
 
-    #: Mapper returning dictionary for a single CPU data
+    # Mapper returning dictionary for a single CPU data
     def _mapper(cpu):
         if cpu_time:
             for k, v in cpu.items():
@@ -118,7 +205,7 @@ def cpu_load(cpu_time=False, core=None):
             return None
 
 
-#: CPU frequency is fixed for non-Linux platforms
+# CPU frequency is fixed for non-Linux platforms
 if psutil.LINUX:
     _cpufreq = None
 else:
@@ -127,9 +214,9 @@ else:
 
 def cpu_freq(core=None):
     """
-    Return CPU frequency for every logical core.
+    Return CPU frequency.
 
-    Function returns an OrderedDict or list of OrderedDict instances:
+    Function returns an OrderedDict or list of OrderedDict instances::
 
         [
             ...
@@ -144,10 +231,42 @@ def cpu_freq(core=None):
     On Linux function returns real-time value of current for every
     logical core. On other platforms it returns a single element list
     with fixed current value.
-    If core is given, function returns metrics only for given core
-    (indexing from zero). If given core doesn't exists, function
-    returns None. This argument is ignored if used on any non-Linux
-    platform.
+
+    :Example:
+
+    >>> import jacoren
+    >>> jacoren.cpu.cpu_freq()
+    [OrderedDict([('current', 1200.0),
+                  ('min', 1200.0),
+                  ('max', 3400.0)]),
+     OrderedDict([('current', 1200.0),
+                  ('min', 1200.0),
+                  ('max', 3400.0)]),
+     OrderedDict([('current', 1200.0),
+                  ('min', 1200.0),
+                  ('max', 3400.0)]),
+     OrderedDict([('current', 1200.0),
+                  ('min', 1200.0),
+                  ('max', 3400.0)])]
+    >>> jacoren.cpu.cpu_freq(core=2)
+    OrderedDict([('current', 1200.0),
+                 ('min', 1200.0),
+                 ('max', 3400.0)])
+    >>> jacoren.cpu.cpu_freq(core=4)
+    None
+
+    :param core: If isn't ``None``, function will return metrics only for
+                 given logical core (counting from zero) as ``OrderedDict``
+                 instance. Otherwise, it will return a list of ``OrderedDict``
+                 instances with metrics for all cores.
+    :type core: int, None
+
+    .. note:: If current platform is a Linux distribution, **core** is ignored.
+              Otherwise, if **core** is beyond possible range, function will
+              return ``None``.
+
+    :returns: CPU frequency for all or single logical core
+    :rtype: list, OrderedDict, None
     """
     if psutil.LINUX:
         cpus = psutil.cpu_freq(percpu=True)
@@ -167,7 +286,7 @@ def cpu(cpu_time=False, core=None):
     Return CPU information.
 
     Function amalgamates all other functions available in this module.
-    It returns an OrderedDict instance:
+    It returns an OrderedDict instance::
 
         {
             'info': <cpu_info()>, # given only if core is None
@@ -177,6 +296,25 @@ def cpu(cpu_time=False, core=None):
 
     For more specific description please refer to appropriate description
     of above functions.
+
+    :param cpu_time: If true, function returns all values in ``load`` as CPU
+                     times. Otherwise, it will return them as CPU time
+                     percentages.
+    :param core: If isn't ``None``, function will return metrics only for
+                 given logical core (counting from zero), ommiting ``info``
+                 key. Otherwise, it will return metrics for all cores.
+    :type cpu_time: bool
+    :type core: int, None
+
+    .. note:: If **core** is beyond possible range, function will return
+              ``None``.
+
+    :returns: CPU load for all or single logical core
+    :rtype: list, None
+
+    .. seealso:: :func:`jacoren.cpu.cpu_info`,
+                 :func:`jacoren.cpu.cpu_load`,
+                 :func:`jacoren.cpu.cpu_freq`
     """
     if core is None:
         return OrderedDict((

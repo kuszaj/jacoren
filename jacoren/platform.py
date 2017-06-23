@@ -24,7 +24,18 @@ def _tdiff(t1, t2):
 
 
 def platform_uptime():
-    """Return uptime in seconds."""
+    """
+    Return uptime in seconds.
+
+    :Example:
+
+    >>> import jacoren
+    >>> jacoren.platform.platform_uptime()
+    13881
+
+    :return: Platform uptime
+    :rtype: int
+    """
     return _tdiff(time.time(), _boot_time)
 
 
@@ -32,7 +43,7 @@ def platform_users():
     """
     Return list of logged users.
 
-    Function returns list of OrderedDict instances:
+    Function returns list of OrderedDict instances::
 
         [
             ...
@@ -42,6 +53,18 @@ def platform_users():
             }
             ...
         ]
+
+    :Example:
+
+    >>> import jacoren
+    >>> jacoren.platform.platform_users()
+    [OrderedDict([('name', 'some_user'),
+                  ('logged_time', 19242)]),
+     OrderedDict([('name', 'another_user'),
+                  ('logged_time', 6176)])]
+
+    :return: List of OrderedDict instancess with user data
+    :rtype: list
     """
     now = time.time()
 
@@ -62,21 +85,40 @@ def platform():
     """
     Return basic information about platform.
 
-    Function returns OrderedDict instance:
+    Function returns OrderedDict instance::
 
         {
             'os': <OS name>
             'version': [
                 <major version>,
                 <minor version>,
-                <release>
+                <release>,
+                <revision>
             ],
             'uptime': <uptime in seconds>,
             'users': <users currently logged in>,
         }
 
-    On some platforms, minor version and release might not be
-    available.
+    On some platforms, minor version, release and revision might not be available.
+
+    :Example:
+
+    >>> import jacoren
+    >>> jacoren.platform.platform()
+    OrderedDict([
+        ('os', 'Linux'),
+        ('version', ('3', '7', '5', '201.fc18.x86_64')),
+        ('uptime', 17411),
+        ('users', [
+            OrderedDict([('name', 'some_user'),
+                         ('logged_time', 17411)]),
+            OrderedDict([('name', 'another_user'),
+                         ('logged_time', 11814)])
+        ])
+    ])
+
+    :return: Basic platform information
+    :rtype: OrderedDict
     """
     return OrderedDict((
         ('os', OS),
