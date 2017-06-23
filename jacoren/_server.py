@@ -50,7 +50,7 @@ def json_response(func):
             'X-Clacks-Overhead': 'GNU Terry Pratchett',
         })
 
-        return Response(json.dumps(result) + '\r\n',
+        return Response(json.dumps(result),
                         headers=headers)
     return new
 
