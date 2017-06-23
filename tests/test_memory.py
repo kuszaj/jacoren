@@ -28,21 +28,36 @@ def test_memory_ram_bytes():
 
     assert isinstance(ram, OrderedDict)
     assert 'total' in ram
-    assert isinstance(ram['total'], int)
+    try:
+        assert isinstance(ram['total'], (int, long))
+    except NameError:
+        assert isinstance(ram['total'], int)
     assert ram['total'] > 0
     assert 'available' in ram
-    assert isinstance(ram['available'], int)
+    try:
+        assert isinstance(ram['available'], (int, long))
+    except NameError:
+        assert isinstance(ram['available'], int)
     assert 'used' in ram
-    assert isinstance(ram['used'], int)
+    try:
+        assert isinstance(ram['used'], (int, long))
+    except NameError:
+        assert isinstance(ram['used'], int)
     assert 'free' in ram
-    assert isinstance(ram['free'], int)
+    try:
+        assert isinstance(ram['free'], (int, long))
+    except NameError:
+        assert isinstance(ram['free'], int)
 
 def test_memory_ram_percent():
     ram = jacoren.memory.memory_ram(percent=True)
 
     assert isinstance(ram, OrderedDict)
     assert 'total' in ram
-    assert isinstance(ram['total'], int)
+    try:
+        assert isinstance(ram['total'], (int, long))
+    except NameError:
+        assert isinstance(ram['total'], int)
     assert ram['total'] > 0.
     assert 'available' in ram
     assert isinstance(ram['available'], float)
@@ -56,25 +71,43 @@ def test_memory_swap_bytes():
 
     assert isinstance(swap, OrderedDict)
     assert 'total' in swap
-    assert isinstance(swap['total'], int)
+    try:
+        assert isinstance(swap['total'], (int, long))
+    except NameError:
+        assert isinstance(swap['total'], int)
     assert swap['total'] > 0
     assert 'used' in swap
-    assert isinstance(swap['used'], int)
+    try:
+        assert isinstance(swap['used'], (int, long))
+    except NameError:
+        assert isinstance(swap['used'], int)
     assert 'free' in swap
-    assert isinstance(swap['free'], int)
+    try:
+        assert isinstance(swap['free'], (int, long))
+    except NameError:
+        assert isinstance(swap['free'], int)
 
     if not psutil.WINDOWS:
         assert 'sin' in swap
-        assert isinstance(swap['sin'], int)
+        try:
+            assert isinstance(swap['sin'], (int, long))
+        except NameError:
+            assert isinstance(swap['sin'], int)
         assert 'sout' in swap
-        assert isinstance(swap['sout'], int)
+        try:
+            assert isinstance(swap['sout'], (int, long))
+        except NameError:
+            assert isinstance(swap['sout'], int)
 
 def test_memory_swap_percent():
     swap = jacoren.memory.memory_swap(percent=True)
 
     assert isinstance(swap, OrderedDict)
     assert 'total' in swap
-    assert isinstance(swap['total'], int)
+    try:
+        assert isinstance(swap['total'], (int, long))
+    except NameError:
+        assert isinstance(swap['total'], int)
     assert swap['total'] > 0.
     assert 'used' in swap
     assert isinstance(swap['used'], float)
@@ -83,6 +116,12 @@ def test_memory_swap_percent():
 
     if not psutil.WINDOWS:
         assert 'sin' in swap
-        assert isinstance(swap['sin'], int)
+        try:
+            assert isinstance(swap['sin'], (int, long))
+        except NameError:
+            assert isinstance(swap['sin'], int)
         assert 'sout' in swap
-        assert isinstance(swap['sout'], int)
+        try:
+            assert isinstance(swap['sout'], (int, long))
+        except NameError:
+            assert isinstance(swap['sout'], int)

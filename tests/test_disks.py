@@ -20,11 +20,20 @@ def test_disks_bytes():
         assert 'opts' in disk
         assert isinstance(disk['opts'], str)
         assert 'total' in disk
-        assert isinstance(disk['total'], int)
+        try:
+            assert isinstance(disk['total'], (int, long))
+        except NameError:
+            assert isinstance(disk['total'], int)
         assert 'used' in disk
-        assert isinstance(disk['used'], int)
+        try:
+            assert isinstance(disk['used'], (int, long))
+        except NameError:
+            assert isinstance(disk['used'], int)
         assert 'free' in disk
-        assert isinstance(disk['free'], int)
+        try:
+            assert isinstance(disk['free'], (int, long))
+        except NameError:
+            assert isinstance(disk['free'], int)
 
 def test_disks_percent():
     disks = jacoren.disks.disks(percent=True)
@@ -41,7 +50,10 @@ def test_disks_percent():
         assert 'opts' in disk
         assert isinstance(disk['opts'], str)
         assert 'total' in disk
-        assert isinstance(disk['total'], int)
+        try:
+            assert isinstance(disk['total'], (int, long))
+        except NameError:
+            assert isinstance(disk['total'], int)
         assert 'used' in disk
         assert isinstance(disk['used'], float)
         assert 'free' in disk
