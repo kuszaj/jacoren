@@ -18,24 +18,24 @@ def test_root():
     assert response.headers['Content-Type'] == 'application/json; charset=UTF-8'
     assert len(response.data) > 0
 
-def test_platform():
-    response = client().get('/platform')
+def test_machine():
+    response = client().get('/machine')
 
     assert response.status_code == 200
     assert 'Content-Type' in response.headers
     assert response.headers['Content-Type'] == 'application/json; charset=UTF-8'
     assert len(response.data) > 0
 
-def test_platform_uptime():
-    response = client().get('/platform/uptime')
+def test_machine_uptime():
+    response = client().get('/machine/uptime')
 
     assert response.status_code == 200
     assert 'Content-Type' in response.headers
     assert response.headers['Content-Type'] == 'application/json; charset=UTF-8'
     assert len(response.data) > 0
 
-def test_platform_users():
-    response = client().get('/platform/users')
+def test_machine_users():
+    response = client().get('/machine/users')
 
     assert response.status_code == 200
     assert 'Content-Type' in response.headers

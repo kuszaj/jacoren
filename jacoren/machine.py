@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Basic platform information."""
+"""Basic machine information."""
 
 import time
 import psutil
@@ -8,10 +8,10 @@ import platform
 from collections import OrderedDict
 
 
-#: Platform OS
+#: machine OS
 OS = platform.system()
 
-#: Platform version tuple (major, minor, release)
+#: machine version tuple (major, minor, release)
 VERSION = tuple(platform.release().split('.', 3))
 
 #: Boot time
@@ -23,23 +23,23 @@ def _tdiff(t1, t2):
     return int(round(t1 - t2))
 
 
-def platform_uptime():
+def machine_uptime():
     """
     Return uptime in seconds.
 
     :Example:
 
     >>> import jacoren
-    >>> jacoren.platform.platform_uptime()
+    >>> jacoren.machine.machine_uptime()
     13881
 
-    :return: Platform uptime
+    :return: machine uptime
     :rtype: int
     """
     return _tdiff(time.time(), _boot_time)
 
 
-def platform_users():
+def machine_users():
     """
     Return list of logged users.
 
@@ -57,7 +57,7 @@ def platform_users():
     :Example:
 
     >>> import jacoren
-    >>> jacoren.platform.platform_users()
+    >>> jacoren.machine.machine_users()
     [OrderedDict([('name', 'some_user'),
                   ('logged_time', 19242)]),
      OrderedDict([('name', 'another_user'),
@@ -81,9 +81,9 @@ def platform_users():
     return users
 
 
-def platform():
+def machine():
     """
-    Return basic information about platform.
+    Return basic information about machine.
 
     Function returns OrderedDict instance::
 
@@ -99,12 +99,12 @@ def platform():
             'users': <users currently logged in>,
         }
 
-    On some platforms, minor version, release and revision might not be available.
+    On some machines, minor version, release and revision might not be available.
 
     :Example:
 
     >>> import jacoren
-    >>> jacoren.platform.platform()
+    >>> jacoren.machine.machine()
     OrderedDict([
         ('os', 'Linux'),
         ('version', ('3', '7', '5', '201.fc18.x86_64')),
@@ -117,12 +117,12 @@ def platform():
         ])
     ])
 
-    :return: Basic platform information
+    :return: Basic machine information
     :rtype: OrderedDict
     """
     return OrderedDict((
         ('os', OS),
         ('version', VERSION),
-        ('uptime', platform_uptime()),
-        ('users', platform_users()),
+        ('uptime', machine_uptime()),
+        ('users', machine_users()),
     ))

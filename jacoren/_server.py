@@ -15,7 +15,7 @@ from werkzeug.serving import WSGIRequestHandler
 
 from jacoren import (
     __version__ as _jacoren_version,
-    platform,
+    machine,
     cpu,
     memory,
     disks,
@@ -79,12 +79,12 @@ class JacorenServer(object):
             JacorenRule('/', endpoint='api_help',
                         doc_desc='This help resource'),
 
-            #: Plaform
-            JacorenRule('/platform', endpoint='platform',
-                        doc_desc='Platform info'),
-            JacorenRule('/platform/uptime', endpoint='platform_uptime',
+            #: Machine
+            JacorenRule('/machine', endpoint='machine',
+                        doc_desc='Machine info'),
+            JacorenRule('/machine/uptime', endpoint='machine_uptime',
                         doc_desc='Uptime in seconds'),
-            JacorenRule('/platform/users', endpoint='platform_users',
+            JacorenRule('/machine/users', endpoint='machine_users',
                         doc_desc='Logged users'),
 
             #: CPU
@@ -166,21 +166,21 @@ class JacorenServer(object):
             ('description', rule.doc_desc)
         )) for rule in self.paths.iter_rules()]
 
-    #: Platform
+    #: Machine
     @json_response
-    def platform(self, request):
+    def machine(self, request):
         """Return platform info."""
-        return platform.platform()
+        return machine.machine()
 
     @json_response
-    def platform_uptime(self, request):
-        """Return platform uptime."""
-        return {'uptime': platform.platform_uptime()}
+    def machine_uptime(self, request):
+        """Return machine uptime."""
+        return {'uptime': machine.machine_uptime()}
 
     @json_response
-    def platform_users(self, request):
+    def machine_users(self, request):
         """Return logged users."""
-        return {'users': platform.platform_users()}
+        return {'users': machine.machine_users()}
 
     #: CPU
     @json_response

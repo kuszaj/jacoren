@@ -11,7 +11,7 @@ Package can also be run as a script. This allows user to create
 a simple RESTful API for receiving data through HTTP requests.
 """
 
-import jacoren.platform
+import jacoren.machine
 import jacoren.cpu
 import jacoren.memory
 import jacoren.disks
