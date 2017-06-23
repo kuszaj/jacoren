@@ -94,7 +94,7 @@ def memory_swap(percent=False):
     if percent:
         metrics = OrderedDict([
             ('total', metrics.total),
-            ('usage', metrics.percent),
+            ('used', metrics.percent),
             ('free', round(100. * metrics.free / metrics.total, 2)),
             ('sin', metrics.sin),
             ('sout', metrics.sout),
