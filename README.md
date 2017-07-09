@@ -7,14 +7,6 @@
 
 ## Installation
 
-#### Using pip
-
-```shell
-$ pip install jacoren
-```
-
-#### From GitHub
-
 ```shell
 $ git clone git@github.com:kuszaj/jacoren.git
 $ cd jacoren && python setup.py install
